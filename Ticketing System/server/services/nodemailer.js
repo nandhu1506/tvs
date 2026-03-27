@@ -5,8 +5,8 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true, 
   auth: {
-    user: "nandhuskumar154@gmail.com",
-    pass: "ipox igun oqdw psrs", 
+    user: process.env.Email,
+    pass: process.env.Email_Password,
   },
 });
 
@@ -26,7 +26,7 @@ IT Helpdesk
 `;
 
   await transporter.sendMail({
-    from: '"IT Helpdesk" nandhuskumar154@gmail.com',
+    from: '"IT Helpdesk" <' + process.env.Email + '>',
     to,
     subject: `Ticket Received - #${ticketId}`,
     text: body,
