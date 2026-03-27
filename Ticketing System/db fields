@@ -1,0 +1,67 @@
+db : ticketing
++---------------------+
+| Tables_in_ticketing |
++---------------------+
+| ticket_attachments  |
+| tickets             |
+| Users               |
++---------------------+
+
+ticket_attachments 
++------------+--------------+------+-----+-------------------+-------------------+
+| Field      | Type         | Null | Key | Default           | Extra             |
++------------+--------------+------+-----+-------------------+-------------------+
+| id         | int          | NO   | PRI | NULL              | auto_increment    |
+| ticket_id  | int          | NO   | MUL | NULL              |                   |
+| file_name  | varchar(255) | YES  |     | NULL              |                   |
+| created_at | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED |
+| file_path  | varchar(255) | YES  |     | NULL              |                   |
++------------+--------------+------+-----+-------------------+-------------------+
+
+
+
+ users;
++-------------+--------------+------+-----+-------------------+-----------------------------------------------+
+| Field       | Type         | Null | Key | Default           | Extra                                         |
++-------------+--------------+------+-----+-------------------+-----------------------------------------------+
+| id          | int          | NO   | PRI | NULL              | auto_increment                                |
+| username    | varchar(100) | NO   | UNI | NULL              |                                               |
+| email       | varchar(150) | NO   | UNI | NULL              |                                               |
+| password    | varchar(255) | NO   |     | NULL              |                                               |
+| Role        | varchar(50)  | YES  |     | User              |                                               |
+| created_on  | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
+| modified_on | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
++-------------+--------------+------+-----+-------------------+-----------------------------------------------+
+
+
+tickets;
++-------------------------+--------------+------+-----+-------------------+-----------------------------------------------+
+| Field                   | Type         | Null | Key | Default           | Extra                                         |
++-------------------------+--------------+------+-----+-------------------+-----------------------------------------------+
+| id                      | int          | NO   | PRI | NULL              | auto_increment                                |
+| date                    | datetime     | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
+| project                 | varchar(100) | YES  |     | NULL              |                                               |
+| outlet                  | varchar(100) | YES  |     | NULL              |                                               |
+| customer_name           | varchar(150) | YES  |     | NULL              |                                               |
+| contact_number          | varchar(20)  | YES  |     | NULL              |                                               |
+| email_id                | varchar(150) | YES  |     | NULL              |                                               |
+| alternate_contact       | varchar(20)  | YES  |     | NULL              |                                               |
+| alternate_customer_name | varchar(150) | YES  |     | NULL              |                                               |
+| subject                 | varchar(255) | YES  |     | NULL              |                                               |
+| source                  | varchar(20)  | YES  |     | NULL              |                                               |
+| priority                | varchar(20)  | YES  |     | NULL              |                                               |
+| category                | varchar(20)  | YES  |     | NULL              |                                               |
+| company                 | varchar(150) | YES  |     | NULL              |                                               |
+| issue_message           | text         | YES  |     | NULL              |                                               |
+| status                  | varchar(20)  | YES  |     | NULL              |                                               |
+| closed_by               | varchar(20)  | YES  |     | NULL              |                                               |
+| closed_at               | datetime     | YES  |     | NULL              |                                               |
+| assigned_to             | varchar(50)  | YES  |     | NULL              |                                               |
+| created_by              | varchar(20)  | YES  |     | NULL              |                                               |
+| created_at              | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED                             |
+| updated_at              | timestamp    | YES  |     | CURRENT_TIMESTAMP | DEFAULT_GENERATED on update CURRENT_TIMESTAMP |
+| cancelled_at            | datetime     | YES  |     | NULL              |                                               |
+| cancelled_by            | varchar(50)  | YES  |     | NULL              |                                               |
++-------------------------+--------------+------+-----+-------------------+-----------------------------------------------+
+
+
