@@ -6,10 +6,29 @@ export const registerAPI = async (reqBody)=>{
     return await commonAPI("POST",`${serverURL}/register`,reqBody)
 }
 
+// forgot password API
+export const forgotPasswordAPI = async (reqBody) => {
+  return await commonAPI(
+    "POST",`${serverURL}/forgot-password`,reqBody);
+};
+
+// verify OTP API
+export const verifyOtpAPI = async (reqBody) => {
+  return await commonAPI(
+    "POST",`${serverURL}/verify-otp`,reqBody);
+};
+
+// reset password API
+export const resetPasswordAPI = async (reqBody) => {
+  return await commonAPI(
+    "POST",`${serverURL}/reset-password`,reqBody);
+};
+
 // login API
 export const loginAPI = async (reqBody)=>{
     return await commonAPI("POST",`${serverURL}/login`,reqBody)
 }
+
 
 // change password API
 export const changePasswordAPI = async (reqBody) =>{
@@ -20,6 +39,7 @@ export const changePasswordAPI = async (reqBody) =>{
       }
     )
 }
+
 
 // addRequest API
 export const addRequestAPI = async (reqBody) => {
@@ -37,7 +57,6 @@ export const getAllTicketsAPI = async () => {
   const token = sessionStorage.getItem("token");
   return await commonAPI("GET",`${serverURL}/tickets`,null,
     {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     }
   );

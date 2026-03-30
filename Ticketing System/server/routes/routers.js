@@ -1,5 +1,5 @@
 const express = require('express')
-const { registerController, loginController, changePasswordController, getAllUsersController } = require('../controllers/userController')
+const { registerController, loginController, changePasswordController, getAllUsersController, forgotPasswordController, verifyOtpController, resetPasswordController } = require('../controllers/userController')
 const multer = require('../Middleware/multerMiddleware')
 const { AddticketController, getAllTicketsController, viewTicketController, updateTicketController, replyTicketController, getProjectsController, exportTicketsController } = require('../controllers/ticketController')
 const { jwtMiddleware } = require('../Middleware/jwtMiddleware')
@@ -14,6 +14,15 @@ router.post('/login',loginController)
 
 // password change
 router.post("/change-password",jwtMiddleware,changePasswordController)
+
+// forgot password
+router.post("/forgot-password", forgotPasswordController);
+
+// verify OTP
+router.post("/verify-otp", verifyOtpController);
+
+// reset password
+router.post("/reset-password", resetPasswordController);
 
 // Add Ticket
 router.post("/addticket",jwtMiddleware, multer.array("attachments", 3),AddticketController);

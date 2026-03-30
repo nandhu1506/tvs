@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconHome } from "../components/Icons";
 import CommonLayout from "../components/CommonLayout";
 import { addRequestAPI } from "../../services/allAPI";
@@ -25,6 +25,7 @@ export default function AddRequest() {
     issueMessage: "",
   });
   const [images, setImages] = useState([]);
+  const fileInputRef = useRef();
 
   const today = new Date().toLocaleString();
 
@@ -58,13 +59,37 @@ export default function AddRequest() {
     );
 
     setImages((prev) => [...prev, ...validFiles]);
+    e.target.value = null;
   };
 
   const removeImage = (index) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
+    if (fileInputRef.current) {
+    fileInputRef.current.value = null;
+    }
   };
+  const validFiles = files.filter(
+  (file) =>
+    file.type.startsWith("image/") &&
+    !images.some((img) => img.name === file.name)
+);
 
   const handleSubmit = async () => {
+
+    if (!form.project || !form.outlet || !form.customerName || !form.contactNumber || !form.emailId || !form.subject || !form.issueMessage){
+        ToastWarning("Please fill all required fields");
+        return;
+      }
+      
+      if (!/^\d{10}$/.test(form.contactNumber)) {
+    ToastWarning("Enter valid 10-digit contact number");
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailId)) {
+    ToastWarning("Enter valid email address");
+    return;
+  }
     const formData = new FormData();
 
     Object.keys(form).forEach((key) => {
@@ -76,11 +101,9 @@ export default function AddRequest() {
     });
 
     try {
-      setLoading(true)
-      if (!form.project || !form.outlet || !form.customerName || !form.contactNumber || !form.emailId || !form.subject || !form.issueMessage){
-        ToastWarning("Please fill all required fields");
-        return;
-      }
+      
+      setLoading(true);
+
       const res = await addRequestAPI(formData);
 
       if (res.status === 201) {
@@ -109,7 +132,7 @@ export default function AddRequest() {
       }
     } catch (err) {
       console.error(err);
-      ToastError("Something went wrong");
+      ToastError(err?.response?.data?.message || "Something went wrong");
     }finally{
       setLoading(false)
     }
@@ -177,7 +200,7 @@ export default function AddRequest() {
 
                 {/* Customer */}
                 <div className="col-span-3">
-                  <label className="text-xs">Customer Name *</label>
+                  <label className="text-xs">Customer Name <span className="text-red-500">*</span></label>
                   <input
                     value={form.customerName}
                     onChange={(e) =>
@@ -189,7 +212,7 @@ export default function AddRequest() {
 
                 {/* Contact */}
                 <div className="col-span-3">
-                  <label className="text-xs">Contact Number *</label>
+                  <label className="text-xs">Contact Number <span className="text-red-500">*</span></label>
                   <input
                     value={form.contactNumber}
                     onChange={(e) =>
@@ -203,7 +226,7 @@ export default function AddRequest() {
             {/* Email */}
               <div className="grid grid-cols-12 gap-6 mb-6">
                 <div className="col-span-3">
-                  <label>Email *</label>
+                  <label>Email <span className="text-red-500">*</span></label>
                   <input
                     value={form.emailId}
                     onChange={(e) =>
@@ -236,7 +259,7 @@ export default function AddRequest() {
                 </div>
 
                 <div className="col-span-3">
-                  <label>Subject *</label>
+                  <label>Subject <span className="text-red-500">*</span></label>
                   <input
                     value={form.subject}
                     onChange={(e) =>
@@ -304,23 +327,20 @@ export default function AddRequest() {
               </div>
 
               {/* Text Area */}
-              <div
-                contentEditable
-                className="border p-4 min-h-[150px]"
-                onInput={(e) => {
-                  const value = e.currentTarget?.innerText || "";
-
-                  setForm((f) => ({
-                    ...f,
-                    issueMessage: value,
-                  }));
-                }}
+              <textarea
+                value={form.issueMessage}
+                onChange={(e) =>
+                  setForm({ ...form, issueMessage: e.target.value })
+                }
+                className="border p-4 min-h-[150px] w-full"
+                placeholder="Describe the issue..."
               />
 
               <div className="mb-6">
                 <label className="text-xs">Add Attachments</label>
 
                 <input
+                  ref={fileInputRef}
                   type="file"
                   name="attachments"
                   accept="image/*"
@@ -352,7 +372,7 @@ export default function AddRequest() {
               
               <div className="flex gap-3">
                 <button onClick={handleSubmit} disabled={loading} className={`px-4 py-2 rounded text-white font-semibold ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}>
-                  Submit
+                  {loading ? "Submitting..." : "Submit"}
                 </button>
                 <button
                   onClick={() => {
@@ -372,6 +392,9 @@ export default function AddRequest() {
                       issueMessage: "",
                     });
                     setImages([]);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = null;
+                    }
                   }}
                   className="bg-gray-200 px-6 py-2 rounded"
                 >

@@ -1,6 +1,8 @@
 const db = require("../services/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const otpStore = require("../services/otpStore");
+const { sendOtpEmail } = require("../services/nodemailer");
 
 
 exports.registerController = async (req, res) => {
@@ -144,5 +146,97 @@ exports.getAllUsersController = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch users" });
+  }
+};
+
+
+exports.forgotPasswordController = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const [users] = await db.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email]
+    );
+
+    if (!users.length) {
+      return res.status(404).json({ message: "Email not found" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    const expiry = Date.now() + 5 * 60 * 1000;
+
+    otpStore.set(email, { otp, expiry });
+
+    await sendOtpEmail(email, otp);
+
+    res.status(200).json({
+      message: "OTP sent successfully",
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+exports.verifyOtpController = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const record = otpStore.get(email);
+
+    if (!record) {
+      return res.status(400).json({ message: "OTP not found" });
+    }
+
+    if (Date.now() > record.expiry) {
+      otpStore.delete(email);
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    if (record.otp != otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    res.status(200).json({
+      message: "OTP verified",
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.resetPasswordController = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        message: "Email and new password required",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    const [result] = await db.query(
+      "UPDATE users SET password = ? WHERE email = ?",
+      [hashedPassword, email]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Password reset successful",
+    });
+
+  } catch (err) {
+    console.error("RESET ERROR:", err); // 🔥 must add
+    res.status(500).json({ message: "Server error" });
   }
 };

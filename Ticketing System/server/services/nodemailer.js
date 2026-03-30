@@ -26,7 +26,7 @@ IT Helpdesk
 `;
 
   await transporter.sendMail({
-    from: '"IT Helpdesk" <' + process.env.Email + '>',
+    from: `"IT Helpdesk" <${process.env.Email}>`,
     to,
     subject: `Ticket Received - #${ticketId}`,
     text: body,
@@ -63,4 +63,29 @@ async function sendReplyEmail(to,ticketId,customerName,subject,message,files = [
   });
 }
 
-module.exports = { sendTicketEmail,sendReplyEmail };
+
+async function sendOtpEmail(to, otp) {
+  const body = `
+Dear User,
+
+You requested to reset your password.
+
+Your OTP is: ${otp}
+
+This OTP is valid for 5 minutes.
+
+⚠️ Do not share this OTP with anyone.
+
+Best regards,
+IT Helpdesk
+`;
+
+  await transporter.sendMail({
+    from: `"IT Helpdesk" <${process.env.Email}>`,
+    to,
+    subject: "Password Reset OTP",
+    text: body,
+  });
+}
+
+module.exports = { sendTicketEmail,sendReplyEmail,sendOtpEmail };

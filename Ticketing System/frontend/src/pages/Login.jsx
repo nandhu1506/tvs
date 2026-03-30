@@ -112,7 +112,7 @@ export default function Login() {
                 </button>
               </div>
               <div className="flex justify-end mt-0.5">
-                <a href="#" className="text-xs text-blue-600 hover:text-blue-800 hover:underline underline-offset-2">
+                <a href="/forgot-password" className="text-xs text-blue-600 hover:text-blue-800 hover:underline underline-offset-2">
                   Forgot password?
                 </a>
               </div>

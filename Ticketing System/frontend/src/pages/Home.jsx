@@ -157,12 +157,6 @@ export default function Home() {
     }
   }, []);
 
-  // useEffect(() => {
-  //   setSearchParams((prev) => {
-  //     return { page: currentPage };
-  //   });
-  // }, [currentPage]);
-
   useEffect(() => {
     const pageFromUrl = parseInt(searchParams.get("page")) || 1;
 
