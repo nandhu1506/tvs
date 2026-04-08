@@ -54,9 +54,12 @@ export default function AddRequest() {
       return;
     }
 
-    const validFiles = files.filter((file) =>
-      file.type.startsWith("image/")
-    );
+    const validFiles = files.filter(
+  (file) =>
+    file.type.startsWith("image/") &&
+    !images.some((img) => img.name === file.name)
+);
+
 
     setImages((prev) => [...prev, ...validFiles]);
     e.target.value = null;
@@ -68,12 +71,7 @@ export default function AddRequest() {
     fileInputRef.current.value = null;
     }
   };
-  const validFiles = files.filter(
-  (file) =>
-    file.type.startsWith("image/") &&
-    !images.some((img) => img.name === file.name)
-);
-
+  
   const handleSubmit = async () => {
 
     if (!form.project || !form.outlet || !form.customerName || !form.contactNumber || !form.emailId || !form.subject || !form.issueMessage){
@@ -337,7 +335,7 @@ export default function AddRequest() {
               />
 
               <div className="mb-6">
-                <label className="text-xs">Add Attachments</label>
+                <label className="text-xs">Add Image Attachments</label>
 
                 <input
                   ref={fileInputRef}
