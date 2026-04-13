@@ -3,7 +3,7 @@ import { IconHome } from "../components/Icons";
 import CommonLayout from "../components/CommonLayout";
 import { addRequestAPI } from "../../services/allAPI";
 import { useNavigate } from "react-router-dom";
-import {  ToastError, ToastSuccess, ToastWarning } from "../components/toastify";
+import { ToastError, ToastSuccess, ToastWarning } from "../components/toastify";
 
 export default function AddRequest() {
 
@@ -25,6 +25,7 @@ export default function AddRequest() {
     issueMessage: "",
   });
   const [images, setImages] = useState([]);
+
   const fileInputRef = useRef();
 
   const today = new Date().toLocaleString();
@@ -36,6 +37,10 @@ export default function AddRequest() {
   const Category = ["Bug", "CodeChange", "Change Request", "Service Request", "Incident Request"]
 
   const Company = ["MYTVS", "COCO", "MFCS", "SMPL", "FOCO", "TVSFCCC", "KI-CV", "Kitara", "Moeving", "Others"]
+
+  const Projects = ["Project 1", "Project 2", "Project 3", "Project 4", "Project 5"];
+
+  const Outlet = ["Outlet 1", "Outlet 2", "Outlet 3", "Outlet 4", "Outlet 5"];
 
   const navigate = useNavigate()
 
@@ -55,10 +60,10 @@ export default function AddRequest() {
     }
 
     const validFiles = files.filter(
-  (file) =>
-    file.type.startsWith("image/") &&
-    !images.some((img) => img.name === file.name)
-);
+      (file) =>
+        file.type.startsWith("image/") &&
+        !images.some((img) => img.name === file.name)
+    );
 
 
     setImages((prev) => [...prev, ...validFiles]);
@@ -68,38 +73,38 @@ export default function AddRequest() {
   const removeImage = (index) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) {
-    fileInputRef.current.value = null;
+      fileInputRef.current.value = null;
     }
   };
-  
+
   const handleSubmit = async () => {
 
-    if (!form.project || !form.outlet || !form.customerName || !form.contactNumber || !form.emailId || !form.subject || !form.issueMessage){
-        ToastWarning("Please fill all required fields");
-        return;
-      }
-      
-      if (!/^\d{10}$/.test(form.contactNumber)) {
-    ToastWarning("Enter valid 10-digit contact number");
-    return;
-  }
+    if (!form.project || !form.outlet || !form.customerName || !form.contactNumber || !form.emailId || !form.subject || !form.issueMessage) {
+      ToastWarning("Please fill all required fields");
+      return;
+    }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailId)) {
-    ToastWarning("Enter valid email address");
-    return;
-  }
+    if (!/^\d{10}$/.test(form.contactNumber)) {
+      ToastWarning("Enter valid 10-digit contact number");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.emailId)) {
+      ToastWarning("Enter valid email address");
+      return;
+    }
     const formData = new FormData();
 
     Object.keys(form).forEach((key) => {
       formData.append(key, form[key]);
     });
 
-    images.forEach((img) => { 
+    images.forEach((img) => {
       formData.append("attachments", img);
     });
 
     try {
-      
+
       setLoading(true);
 
       const res = await addRequestAPI(formData);
@@ -131,12 +136,12 @@ export default function AddRequest() {
     } catch (err) {
       console.error(err);
       ToastError(err?.response?.data?.message || "Something went wrong");
-    }finally{
+    } finally {
       setLoading(false)
     }
   };
 
-  
+
 
 
   return (
@@ -174,11 +179,12 @@ export default function AddRequest() {
                     }
                     className="w-full border-b py-1 text-sm"
                   >
-                    <option value="">Select Project </option>
-                    <option >Project 1</option>
-                    <option >Project 2</option>
-                    <option >Project 3</option>
-                    <option >Project 4</option>
+                    <option value="" >Select Project</option>
+                    {Projects.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
                   </select>
 
                   <select
@@ -188,11 +194,12 @@ export default function AddRequest() {
                     }
                     className="w-full border-b py-1 text-sm"
                   >
-                    <option value="">Select Outlet</option>
-                    <option>Outlet 1</option>
-                    <option>Outlet 2</option>
-                    <option>Outlet 3</option>
-                    <option>Outlet 4</option>
+                    <option value="" >Select Outlet</option>
+                    {Outlet.map((o) => (
+                      <option key={o} value={o}>
+                        {o}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -221,7 +228,7 @@ export default function AddRequest() {
                 </div>
               </div>
 
-            {/* Email */}
+              {/* Email */}
               <div className="grid grid-cols-12 gap-6 mb-6">
                 <div className="col-span-3">
                   <label>Email <span className="text-red-500">*</span></label>
@@ -268,7 +275,7 @@ export default function AddRequest() {
                 </div>
               </div>
 
-            {/* source,category,company */}
+              {/* source,category,company */}
               <div className="grid grid-cols-12 gap-6 mb-6">
                 <select className="col-span-3 border-b py-1"
                   value={form.source}
@@ -330,7 +337,7 @@ export default function AddRequest() {
                 onChange={(e) =>
                   setForm({ ...form, issueMessage: e.target.value })
                 }
-                className="border p-4 min-h-[150px] w-full"
+                className="border p-4 min-h-37.5 w-full rounded-lg shadow-sm bg-white"
                 placeholder="Describe the issue..."
               />
 
@@ -367,7 +374,7 @@ export default function AddRequest() {
                 </div>
               </div>
 
-              
+
               <div className="flex gap-3">
                 <button onClick={handleSubmit} disabled={loading} className={`px-4 py-2 rounded text-white font-semibold ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}>
                   {loading ? "Submitting..." : "Submit"}

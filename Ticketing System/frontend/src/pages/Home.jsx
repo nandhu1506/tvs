@@ -6,17 +6,17 @@ import { getAllTicketsAPI, getProjectsAPI } from "../../services/allAPI";
 
 
 export default function Home() {
-  const [statusFilter, setStatusFilter] = useState("");
+
   const [statusList, setStatusList] = useState([]);
-  const [projectFilter, setProjectFilter] = useState("");
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [searchParams] = useSearchParams();
-  const [isFirstRender, setIsFirstRender] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [projects, setProjects] = useState([]);
+  const statusFilter = searchParams.get("status") || "";
+  const projectFilter = searchParams.get("project") || "";
+  const currentPage = parseInt(searchParams.get("page")) || 1;
 
-  const [currentPage, setCurrentPage] = useState(1);
   const getPageNumbers = () => {
     const delta = 2;
     const range = [];
@@ -43,7 +43,7 @@ export default function Home() {
 
     return rangeWithDots;
   };
- 
+
   const StatusPill = ({ status }) => {
     const colors = {
       Assigned: "bg-amber-100 text-amber-700 border-amber-200",
@@ -60,9 +60,37 @@ export default function Home() {
   };
 
   const handleResetFilters = () => {
-    setStatusFilter("");
-    setProjectFilter("");
     navigate("?page=1");
+  };
+
+  const handleParams = (page) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("page", page);
+    return `?${params.toString()}`;
+  };
+
+  useEffect(() => {
+  const delay = setTimeout(() => {
+    fetchTickets();
+  }, 300);
+
+  return () => clearTimeout(delay);
+}, [currentPage, statusFilter, projectFilter]);
+
+  const handleUpdateFilters = ({ status, project, page = 1 }) => {
+    const params = new URLSearchParams(searchParams);
+
+    params.set("page", page);
+
+    if (status !== undefined) {
+      status ? params.set("status", status) : params.delete("status");
+    }
+
+    if (project !== undefined) {
+      project ? params.set("project", project) : params.delete("project");
+    }
+
+    navigate(`?${params.toString()}`);
   };
 
   const TableHeaders = [
@@ -76,28 +104,6 @@ export default function Home() {
     "Actions",
   ];
 
-  useEffect(() => {
-    if (isFirstRender) {
-      setIsFirstRender(false);
-      return;
-    }
-    navigate("?page=1", { replace: true });
-  }, [statusFilter, projectFilter]);
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const res = await getProjectsAPI();
-
-        if (res.status !== 200) return;
-
-        setProjects(res.data.projects || []);
-      } catch (err) {
-        console.error("Project fetch error:", err);
-      }
-    };
-    fetchProjects();
-  }, []);
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -110,14 +116,11 @@ export default function Home() {
         });
 
         if (res.status !== 200) return;
-
         const responseData = res.data;
-
         if (!responseData || !responseData.data) {
           console.error("Invalid API response:", responseData);
           return;
         }
-
         const formatted = responseData.data.map((t) => {
           const dateObj = new Date(t.created_at);
           return {
@@ -138,12 +141,10 @@ export default function Home() {
             }),
           };
         });
-
         setTickets(formatted);
         setTotalPages(responseData.totalPages);
         setStatusList(responseData.filters?.status || []);
         setProjects(responseData.filters?.projects || []);
-
       } catch (err) {
         console.error(err);
       }
@@ -159,10 +160,6 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    const page = parseInt(searchParams.get("page")) || 1;
-    setCurrentPage(page);
-  }, [searchParams]);
 
 
   return (
@@ -177,7 +174,7 @@ export default function Home() {
           </Link>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => handleUpdateFilters({ status: e.target.value })}
             className="appearance-none bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg pl-4 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
           >
             <option value="">-- Select Status --</option>
@@ -190,7 +187,7 @@ export default function Home() {
 
           <select
             value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
+            onChange={(e) => handleUpdateFilters({ project: e.target.value })}
             className="appearance-none bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg pl-4 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
           >
             <option value="">-- Select Project --</option>
@@ -295,7 +292,7 @@ export default function Home() {
       {totalPages > 1 && (
         <div className="flex justify-center items-center mt-4 gap-2">
           <button
-            onClick={() => navigate(`?page=${Math.max(currentPage - 1, 1)}`)}
+            onClick={() => navigate(handleParams(Math.max(currentPage - 1, 1)))}
             disabled={currentPage === 1}
             className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
           >
@@ -310,7 +307,7 @@ export default function Home() {
             ) : (
               <button
                 key={page}
-                onClick={() => navigate(`?page=${page}`)}
+                onClick={() => navigate(handleParams(page))}
                 className={`px-3 py-1 rounded ${currentPage === page ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
               >
                 {page}
@@ -319,7 +316,7 @@ export default function Home() {
           )}
 
           <button
-            onClick={() => navigate(`?page=${Math.min(currentPage + 1, totalPages)}`)}
+            onClick={() => navigate(handleParams(Math.min(currentPage + 1, totalPages)))}
             disabled={currentPage === totalPages}
             className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
           >
