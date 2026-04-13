@@ -7,9 +7,9 @@
   import { ToastContainer } from "react-toastify";
   import Pnf from "./Pnf";
   import ProtectedRoute from "../services/ProtectedRoute";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import VerifyOTP from "./pages/VerifyOtp";
+  import ForgotPassword from "./pages/ForgotPassword";
+  import ResetPassword from "./pages/ResetPassword";
+  import VerifyOTP from "./pages/VerifyOtp";
 
 
 

@@ -100,23 +100,59 @@ exports.AddticketController = async (req, res) => {
 // getAllTickets
 exports.getAllTicketsController = async (req, res) => {
   try {
-    const [rows] = await db.query(`
-      SELECT 
-          t.id,
-          t.project,
-          t.subject,
-          t.status,
-          t.outlet,
-          t.assigned_to,
-          t.created_at
-      FROM tickets t
-      ORDER BY t.created_at DESC;
-    `);
+    const { page = 1, limit = 10, status, project } = req.query;
 
-    res.status(200).json(rows);
+    const offset = (page - 1) * limit;
+
+    let whereClause = "WHERE 1=1";
+    let values = [];
+
+    if (status) {
+      whereClause += " AND status = ?";
+      values.push(status);
+    }
+
+    if (project) {
+      whereClause += " AND project = ?";
+      values.push(project);
+    }
+
+    // 🔹 Get paginated data
+    const [tickets] = await db.query(
+      `SELECT * FROM tickets ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...values, parseInt(limit), parseInt(offset)]
+    );
+
+    // 🔹 Get total count
+    const [countResult] = await db.query(
+      `SELECT COUNT(*) as total FROM tickets ${whereClause}`,
+      values
+    );
+
+    const total = countResult[0].total;
+    const totalPages = Math.ceil(total / limit);
+
+    // ✅ NEW: Get ALL unique filters (NO where clause!)
+    const [statusList] = await db.query(
+      `SELECT DISTINCT status FROM tickets`
+    );
+
+    const [projectList] = await db.query(
+      `SELECT DISTINCT project FROM tickets`
+    );
+
+    res.status(200).json({
+      data: tickets,
+      totalPages,
+      filters: {
+        status: statusList.map(s => s.status),
+        projects: projectList.map(p => p.project)
+      }
+    });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to fetch tickets" });
+    res.status(500).json({ message: "Server Error" });
   }
 };
 

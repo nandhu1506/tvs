@@ -2,31 +2,21 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import CommonLayout from "../components/CommonLayout";
 import { IconClose, IconSearch } from "../components/Icons";
-import { getAllTicketsAPI } from "../../services/allAPI";
+import { getAllTicketsAPI, getProjectsAPI } from "../../services/allAPI";
 
 
 export default function Home() {
   const [statusFilter, setStatusFilter] = useState("");
+  const [statusList, setStatusList] = useState([]);
   const [projectFilter, setProjectFilter] = useState("");
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [searchParams] = useSearchParams();
   const [isFirstRender, setIsFirstRender] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
+  const [projects, setProjects] = useState([]);
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page")) || 1);
-  const itemsPerPage = 10;
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const filtered = tickets.filter((row) => {
-    const matchStatus = !statusFilter || row.status === statusFilter;
-    const matchProject = !projectFilter || row.project === projectFilter;
-    return matchStatus && matchProject;
-  });
-
-  const currentTickets = filtered.slice(indexOfFirstItem, indexOfLastItem);
-
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const [currentPage, setCurrentPage] = useState(1);
   const getPageNumbers = () => {
     const delta = 2;
     const range = [];
@@ -53,12 +43,7 @@ export default function Home() {
 
     return rangeWithDots;
   };
-
-
-
-  const projects = [...new Set(tickets.map((r) => r.project))];
-  const status = [...new Set(tickets.map((s) => s.status))];
-
+ 
   const StatusPill = ({ status }) => {
     const colors = {
       Assigned: "bg-amber-100 text-amber-700 border-amber-200",
@@ -77,8 +62,7 @@ export default function Home() {
   const handleResetFilters = () => {
     setStatusFilter("");
     setProjectFilter("");
-    setCurrentPage(1);
-    // setSearchParams({ page: 1 });
+    navigate("?page=1");
   };
 
   const TableHeaders = [
@@ -97,31 +81,44 @@ export default function Home() {
       setIsFirstRender(false);
       return;
     }
-    setCurrentPage(1);
-    navigate(`?page=1`, { replace: false });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    navigate("?page=1", { replace: true });
   }, [statusFilter, projectFilter]);
 
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await getProjectsAPI();
+
+        if (res.status !== 200) return;
+
+        setProjects(res.data.projects || []);
+      } catch (err) {
+        console.error("Project fetch error:", err);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const res = await getAllTicketsAPI();
+        const res = await getAllTicketsAPI({
+          page: currentPage,
+          limit: 10,
+          status: statusFilter,
+          project: projectFilter,
+        });
 
-        if (res.status !== 200) {
-          console.error("Error fetching tickets:", res.status, res.data);
+        if (res.status !== 200) return;
+
+        const responseData = res.data;
+
+        if (!responseData || !responseData.data) {
+          console.error("Invalid API response:", responseData);
           return;
         }
 
-
-        const data = res.data;
-
-        if (!Array.isArray(data)) {
-          console.error("Data is not an array:", data);
-          return;
-        }
-
-        const formatted = data.map((t) => {
+        const formatted = responseData.data.map((t) => {
           const dateObj = new Date(t.created_at);
           return {
             id: t.id,
@@ -143,36 +140,29 @@ export default function Home() {
         });
 
         setTickets(formatted);
+        setTotalPages(responseData.totalPages);
+        setStatusList(responseData.filters?.status || []);
+        setProjects(responseData.filters?.projects || []);
+
       } catch (err) {
-        console.error("Error fetching tickets:", err);
+        console.error(err);
       }
     };
+
     fetchTickets();
-  }, []);
+
+  }, [currentPage, statusFilter, projectFilter]);
 
   useEffect(() => {
-    const page = searchParams.get("page");
-    if (!page) {
+    if (!searchParams.get("page")) {
       navigate("?page=1", { replace: true });
     }
   }, []);
 
   useEffect(() => {
-    const pageFromUrl = parseInt(searchParams.get("page")) || 1;
-
-    if (pageFromUrl !== currentPage) {
-      navigate(`?page=${currentPage}`, { replace: false });
-    }
-  }, [currentPage]);
-
-  useEffect(() => {
     const page = parseInt(searchParams.get("page")) || 1;
-    if (page !== currentPage) {
-      setCurrentPage(page);
-    }
+    setCurrentPage(page);
   }, [searchParams]);
-
-
 
 
   return (
@@ -191,7 +181,7 @@ export default function Home() {
             className="appearance-none bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg pl-4 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 cursor-pointer"
           >
             <option value="">-- Select Status --</option>
-            {status.map((s) => (
+            {statusList.map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
@@ -234,14 +224,14 @@ export default function Home() {
             </tr>
           </thead>
           <tbody>
-            {currentTickets.length === 0 ? (
+            {tickets.length === 0 ? (
               <tr>
                 <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
                   No records match the selected filters.
                 </td>
               </tr>
             ) : (
-              currentTickets.map((row, i) => (
+              tickets.map((row, i) => (
                 <tr
                   key={row.id}
                   className={`border-b border-slate-100 hover:bg-blue-50 transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-50/60"}`}
@@ -305,7 +295,7 @@ export default function Home() {
       {totalPages > 1 && (
         <div className="flex justify-center items-center mt-4 gap-2">
           <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            onClick={() => navigate(`?page=${Math.max(currentPage - 1, 1)}`)}
             disabled={currentPage === 1}
             className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
           >
@@ -320,7 +310,7 @@ export default function Home() {
             ) : (
               <button
                 key={page}
-                onClick={() => setCurrentPage(page)}
+                onClick={() => navigate(`?page=${page}`)}
                 className={`px-3 py-1 rounded ${currentPage === page ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"}`}
               >
                 {page}
@@ -329,7 +319,7 @@ export default function Home() {
           )}
 
           <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            onClick={() => navigate(`?page=${Math.min(currentPage + 1, totalPages)}`)}
             disabled={currentPage === totalPages}
             className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
           >
