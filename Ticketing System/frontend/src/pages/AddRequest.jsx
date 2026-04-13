@@ -53,19 +53,32 @@ export default function AddRequest() {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
+    const maxSize = 3 * 1024 * 1024;
+
+    if (files.some((file) => file.size > maxSize)) {
+      ToastWarning(`Each image must be less than ${maxSize / (1024 * 1024)}MB`);
+      e.target.value = null;
+      return;
+    }
+
+    if (files.some((file) => images.some((img) => img.name === file.name))) {
+      ToastWarning("Duplicate images are not allowed");
+      e.target.value = null;
+      return;
+    }
 
     if (images.length + files.length > 3) {
       ToastWarning("You can upload maximum 3 images");
+      e.target.value = null;
       return;
     }
 
     const validFiles = files.filter(
       (file) =>
         file.type.startsWith("image/") &&
-        !images.some((img) => img.name === file.name)
+        !images.some((img) => img.name === file.name) &&
+        file.size <= maxSize
     );
-
-
     setImages((prev) => [...prev, ...validFiles]);
     e.target.value = null;
   };

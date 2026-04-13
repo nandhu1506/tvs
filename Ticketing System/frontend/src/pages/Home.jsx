@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import CommonLayout from "../components/CommonLayout";
 import { IconClose, IconSearch } from "../components/Icons";
-import { getAllTicketsAPI, getProjectsAPI } from "../../services/allAPI";
+import { getAllTicketsAPI } from "../../services/allAPI";
 
 
 export default function Home() {
@@ -69,14 +69,6 @@ export default function Home() {
     return `?${params.toString()}`;
   };
 
-  useEffect(() => {
-  const delay = setTimeout(() => {
-    fetchTickets();
-  }, 300);
-
-  return () => clearTimeout(delay);
-}, [currentPage, statusFilter, projectFilter]);
-
   const handleUpdateFilters = ({ status, project, page = 1 }) => {
     const params = new URLSearchParams(searchParams);
 
@@ -104,54 +96,56 @@ export default function Home() {
     "Actions",
   ];
 
+  const fetchTickets = async () => {
+    try {
+      const res = await getAllTicketsAPI({
+        page: currentPage,
+        limit: 10,
+        status: statusFilter,
+        project: projectFilter,
+      });
+
+      if (res.status !== 200) return;
+      const responseData = res.data;
+      if (!responseData || !responseData.data) {
+        console.error("Invalid API response:", responseData);
+        return;
+      }
+      const formatted = responseData.data.map((t) => {
+        const dateObj = new Date(t.created_at);
+        return {
+          id: t.id,
+          project: t.project,
+          subject: t.subject,
+          status: t.status,
+          callRaisedPerson: t.outlet,
+          assignedTo: t.assigned_to,
+          callDate: dateObj.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+          callTime: dateObj.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        };
+      });
+      setTickets(formatted);
+      setTotalPages(responseData.totalPages);
+      setStatusList(responseData.filters?.status || []);
+      setProjects(responseData.filters?.projects || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        const res = await getAllTicketsAPI({
-          page: currentPage,
-          limit: 10,
-          status: statusFilter,
-          project: projectFilter,
-        });
+    const delay = setTimeout(() => {
+      fetchTickets();
+    }, 300);
 
-        if (res.status !== 200) return;
-        const responseData = res.data;
-        if (!responseData || !responseData.data) {
-          console.error("Invalid API response:", responseData);
-          return;
-        }
-        const formatted = responseData.data.map((t) => {
-          const dateObj = new Date(t.created_at);
-          return {
-            id: t.id,
-            project: t.project,
-            subject: t.subject,
-            status: t.status,
-            callRaisedPerson: t.outlet,
-            assignedTo: t.assigned_to,
-            callDate: dateObj.toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            }),
-            callTime: dateObj.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          };
-        });
-        setTickets(formatted);
-        setTotalPages(responseData.totalPages);
-        setStatusList(responseData.filters?.status || []);
-        setProjects(responseData.filters?.projects || []);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchTickets();
-
+    return () => clearTimeout(delay);
   }, [currentPage, statusFilter, projectFilter]);
 
   useEffect(() => {
@@ -159,7 +153,6 @@ export default function Home() {
       navigate("?page=1", { replace: true });
     }
   }, []);
-
 
 
   return (

@@ -1,8 +1,12 @@
 const express = require('express')
+
 const { registerController, loginController, changePasswordController, getAllUsersController, forgotPasswordController, verifyOtpController, resetPasswordController } = require('../controllers/userController')
-const multer = require('../Middleware/multerMiddleware')
+
 const { AddticketController, getAllTicketsController, viewTicketController, updateTicketController, replyTicketController, getProjectsController, exportTicketsController } = require('../controllers/ticketController')
+
 const { jwtMiddleware } = require('../Middleware/jwtMiddleware')
+
+const multer = require('../Middleware/multerMiddleware')
 
 const router = new express.Router()
 
