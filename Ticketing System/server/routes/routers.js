@@ -2,7 +2,7 @@ const express = require('express')
 
 const { registerController, loginController, changePasswordController, getAllUsersController, forgotPasswordController, verifyOtpController, resetPasswordController } = require('../controllers/userController')
 
-const { AddticketController, getAllTicketsController, viewTicketController, updateTicketController, replyTicketController, getProjectsController, exportTicketsController } = require('../controllers/ticketController')
+const { AddticketController, getAllTicketsController, viewTicketController, updateTicketController, replyTicketController, getProjectsController, exportTicketsController, getMinDateController } = require('../controllers/ticketController')
 
 const { jwtMiddleware } = require('../Middleware/jwtMiddleware')
 
@@ -48,6 +48,9 @@ router.post("/ticket/reply", jwtMiddleware, multer.array("attachments"),replyTic
 
 // get project names
 router.get("/projects",jwtMiddleware,getProjectsController)
+
+// get Minimun date
+router.get("/min-date",getMinDateController)
 
 // export excel
 router.get("/export",jwtMiddleware,exportTicketsController);

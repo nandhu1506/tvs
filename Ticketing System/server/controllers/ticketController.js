@@ -301,6 +301,18 @@ exports.getProjectsController = async (req, res) => {
   }
 };
 
+// Get Minimun date
+exports.getMinDateController = async (req,res) => {
+  try{
+    const [rows] = await db.query(
+      "SELECT MIN(date) AS minDate FROM tickets"
+    )
+    res.json({ minDate: rows[0].minDate });
+  }catch(err){
+    res.status(500).json({ error: err.message });
+}
+};
+
 // export excel
 exports.exportTicketsController = async (req, res) => {
   try {

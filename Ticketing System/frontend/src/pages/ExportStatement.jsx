@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import CommonLayout from "../components/CommonLayout";
 import { exportTicketsAPI, getProjectsAPI } from "../../services/allAPI";
 import { ToastWarning } from "../components/toastify";
+import { serverURL } from "../../config";
 
 export default function ExportStatement() {
   const [fromDate, setFromDate] = useState("");
@@ -9,6 +10,7 @@ export default function ExportStatement() {
   const [projects, setProjects] = useState([]);
   const [project, setProject] = useState("");
   const [loading, setLoading] = useState(false);
+  const [minDate, setMinDate] = useState("");
 
   useEffect(() => {
     getProjectsAPI()
@@ -16,6 +18,29 @@ export default function ExportStatement() {
       .catch(err => console.error(err));
   }, []);
 
+  useEffect(() => {
+  if (toDate && fromDate && toDate < fromDate) {
+    setToDate("");
+  }
+  }, [fromDate]);
+
+  useEffect(() => {
+    const fetchMinDate = async () => {
+      try {
+        const res = await fetch(`${serverURL}/min-date`);
+        const data = await res.json();
+        const formatted = new Date(data.minDate)
+          .toISOString()
+          .split("T")[0];
+
+        setMinDate(formatted);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchMinDate();
+  }, []);
+ 
   const handleDownload = async () => {
   if (!fromDate || !toDate || !project) {
     ToastWarning("All fields required");
@@ -71,6 +96,8 @@ export default function ExportStatement() {
             </label>
             <input
               type="date"
+              min={minDate}
+              max={new Date().toISOString().split("T")[0]}
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
               className="border-b-2 border-slate-200 focus:border-blue-500 outline-none py-1 text-sm"
@@ -84,6 +111,8 @@ export default function ExportStatement() {
             <input
               type="date"
               value={toDate}
+              min={fromDate || minDate}
+              max={new Date().toISOString().split("T")[0]}
               onChange={(e) => setToDate(e.target.value)}
               className="border-b-2 border-slate-200 focus:border-blue-500 outline-none py-1 text-sm"
             />
