@@ -1,12 +1,17 @@
-import { RiFileExcel2Fill } from "react-icons/ri";
+import { RiFileExcel2Fill, RiUserAddLine } from "react-icons/ri";
 import { HiClipboardDocumentList } from "react-icons/hi2";
 import { MdNoteAdd } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-
+import AddUserModal from "./AddUserModal";
+import { useState } from "react";
+import { ToastSuccess } from "./toastify";
 
 
 export default function Sidebar({ isOpen }) {
   const navigate = useNavigate()
+  const [open, setOpen] = useState(false);
+
+
   return (
     <div
       className={`flex flex-col pt-4 gap-3 shadow-sm border-r border-slate-200 flex-shrink-0
@@ -31,6 +36,21 @@ export default function Sidebar({ isOpen }) {
 
           {isOpen && <span className="text-slate-700 font-medium">Export</span>}
         </button>
+      {
+        JSON.parse(sessionStorage.getItem("user"))?.role === "admin" && (
+          <button onClick={() => setOpen(true)} className="flex items-center gap-3 w-full px-2 py-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
+            <RiUserAddLine size={25} color="blue" />
+            {isOpen && <span className="text-slate-700 font-medium">Add User</span>}
+          </button>
+        )
+      }  
+      <AddUserModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        onUserAdded={() => {
+          ToastSuccess("User added successfully!");
+        }}
+      />      
       </div>
     </div>
   );

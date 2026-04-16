@@ -11,7 +11,7 @@ const multer = require('../Middleware/multerMiddleware')
 const router = new express.Router()
 
 // register
-router.post('/register',registerController)
+router.post('/register',jwtMiddleware,registerController)
 
 // login
 router.post('/login',loginController)

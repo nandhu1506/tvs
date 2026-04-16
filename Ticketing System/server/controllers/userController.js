@@ -6,12 +6,15 @@ const { sendOtpEmail } = require("../services/nodemailer");
 
 
 exports.registerController = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Forbidden: Admins only" });
+  }else{
   try {
-    const { username, password, email } = req.body;
+    const { username, name, password, email, role } = req.body;
 
-    if (!username || !password || !email) {
+    if (!username || !name || !password || !email) {
       return res.status(400).json({
-        message: "Username, email and password are required",
+        message: "Username, name, email and password are required",
       });
     }
 
@@ -29,8 +32,8 @@ exports.registerController = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [result] = await db.query(
-      "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-      [username, email, hashedPassword]
+      "INSERT INTO users (username, name, email, password, role) VALUES (?, ?, ?, ?, ?)",
+      [username, name, email, hashedPassword, role || "user"]
     );
 
     res.status(201).json({
@@ -41,6 +44,7 @@ exports.registerController = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
+}
 };
 
 exports.loginController = async (req, res) => {
@@ -65,7 +69,7 @@ exports.loginController = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username },
+      { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -76,6 +80,9 @@ exports.loginController = async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
+        name: user.name,
+        email: user.email,
+        role: user.role,
       },
     });
 
