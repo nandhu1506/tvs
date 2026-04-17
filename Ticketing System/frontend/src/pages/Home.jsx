@@ -7,6 +7,7 @@ import { getAllTicketsAPI } from "../../services/allAPI";
 
 export default function Home() {
 
+  const [loading, setLoading] = useState(true);
   const [statusList, setStatusList] = useState([]);
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
@@ -98,6 +99,7 @@ export default function Home() {
 
   const fetchTickets = async () => {
     try {
+      setLoading(true);
       const res = await getAllTicketsAPI({
         page: currentPage,
         limit: 10,
@@ -137,15 +139,13 @@ export default function Home() {
       setProjects(responseData.filters?.projects || []);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchTickets();
-    }, 300);
-
-    return () => clearTimeout(delay);
+    fetchTickets();
   }, [currentPage, statusFilter, projectFilter]);
 
   useEffect(() => {
@@ -214,69 +214,78 @@ export default function Home() {
             </tr>
           </thead>
           <tbody>
-            {tickets.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
-                  No records match the selected filters.
-                </td>
-              </tr>
-            ) : (
-              tickets.map((row, i) => (
-                <tr
-                  key={row.id}
-                  className={`border-b border-slate-100 hover:bg-blue-50 transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-50/60"}`}
-                >
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-md">
-                      {row.project}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    <a
-                      href="#"
-                      className="text-blue-600 hover:text-blue-800 font-semibold hover:underline underline-offset-2"
-                    >
-                      {row.id}
-                    </a>
-                  </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    <div className="font-semibold text-slate-700">{row.callDate}</div>
-                    <div className="text-xs text-slate-400 mt-0.5">{row.callTime}</div>
-                  </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap font-medium text-slate-700">
-                    {row.callRaisedPerson}
-                  </td>
-                  <td className="px-4 py-3.5 max-w-xs text-slate-600 leading-relaxed">{row.subject}</td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    {row.assignedTo ? (
-                      <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2.5 py-1 rounded-md">
-                        {row.assignedTo}
-                      </span>
-                    ) : (
-                      <span className="text-slate-300">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    <StatusPill status={row.status} />
-                  </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => navigate(`/viewticket/${row.id}`)}
-                        className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-90 text-white flex items-center justify-center shadow-sm transition-all"
-                      >
-                        <IconSearch />
-                      </button>
-                      {row.status === "Open" && (
-                        <button className="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 active:scale-90 text-white flex items-center justify-center shadow-sm transition-all">
-                          <IconClose />
-                        </button>
-                      )}
-                    </div>
+            {loading ? (
+              [...Array(5)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td colSpan={8} className="px-4 py-6">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
                   </td>
                 </tr>
               ))
-            )}
+            ) :
+              tickets.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
+                    No records match the selected filters.
+                  </td>
+                </tr>
+              ) : (
+                tickets.map((row, i) => (
+                  <tr
+                    key={row.id}
+                    className={`border-b border-slate-100 hover:bg-blue-50 transition-colors ${i % 2 === 0 ? "bg-white" : "bg-slate-50/60"}`}
+                  >
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-md">
+                        {row.project}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <a
+                        href="#"
+                        className="text-blue-600 hover:text-blue-800 font-semibold hover:underline underline-offset-2"
+                      >
+                        {row.id}
+                      </a>
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <div className="font-semibold text-slate-700">{row.callDate}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">{row.callTime}</div>
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap font-medium text-slate-700">
+                      {row.callRaisedPerson}
+                    </td>
+                    <td className="px-4 py-3.5 max-w-xs text-slate-600 leading-relaxed">{row.subject}</td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      {row.assignedTo ? (
+                        <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2.5 py-1 rounded-md">
+                          {row.assignedTo}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <StatusPill status={row.status} />
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => navigate(`/viewticket/${row.id}`)}
+                          className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-90 text-white flex items-center justify-center shadow-sm transition-all"
+                        >
+                          <IconSearch />
+                        </button>
+                        {row.status === "Open" && (
+                          <button className="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 active:scale-90 text-white flex items-center justify-center shadow-sm transition-all">
+                            <IconClose />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
           </tbody>
         </table>
       </div>

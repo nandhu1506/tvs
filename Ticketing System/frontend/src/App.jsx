@@ -1,37 +1,89 @@
-  import { Route, Routes } from "react-router-dom";
-  import AddRequest from "./pages/AddRequest";
-  import Home from "./pages/Home";
-  import Login from "./pages/Login";
-  import ViewTicket from "./pages/ViewTicket";
-  import ExportStatement from "./pages/ExportStatement";
-  import { ToastContainer } from "react-toastify";
-  import Pnf from "./Pnf";
-  import ProtectedRoute from "../services/ProtectedRoute";
-  import ForgotPassword from "./pages/ForgotPassword";
-  import ResetPassword from "./pages/ResetPassword";
-  import VerifyOTP from "./pages/VerifyOtp";
+import { Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
+const ToastContainer = lazy(() =>
+  import("react-toastify").then(module => ({
+    default: module.ToastContainer
+  }))
+);
+const ProtectedRoute = lazy(()=>import("../services/ProtectedRoute")) ;
+const AddRequest = lazy(() => import("./pages/AddRequest"));
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const ViewTicket = lazy(() => import("./pages/ViewTicket"));
+const ExportStatement = lazy(() => import("./pages/ExportStatement"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const VerifyOTP = lazy(() => import("./pages/VerifyOtp"));
+const Pnf = lazy(() => import("./Pnf"));
 
 
+const Loader = () => (
+  <div className="flex justify-center items-center h-screen">
+    Loading...
+  </div>
+);
 
-  function App() {
-
-
-    return (
-      <>
+function App() {
+  return (
+    <>
         <Routes>
-          <Route path="/" element={<Login/> } />
-          <Route path="/Home" element={ <ProtectedRoute><Home/></ProtectedRoute> } />  
-          <Route path="/addRequest" element={ <ProtectedRoute><AddRequest/></ProtectedRoute> } />
-          <Route path="/viewticket/:id" element={ <ProtectedRoute><ViewTicket/></ProtectedRoute> } />
-          <Route path="/export" element={ <ProtectedRoute><ExportStatement/></ProtectedRoute> } />
-          <Route path="/forgot-password" element={ <ForgotPassword/> } />
-          <Route path="/verify-otp" element={ <VerifyOTP/> } />
-          <Route path="/reset-password" element={ <ResetPassword/> } />
-          <Route path="/*" element={ <ProtectedRoute><Pnf/></ProtectedRoute> } />
-        </Routes>
-        <ToastContainer />
-      </>
-    );
-  }
+          
+          <Route path="/" element={
+            <Suspense fallback={<Loader />}>
+              <Login />
+              </Suspense>
+            } />
+          
+          <Route path="/home" element={
+            <Suspense fallback={<Loader />}>
+              <ProtectedRoute><Home /></ProtectedRoute>
+            </Suspense>
+          } />
 
-  export default App;
+          <Route path="/addRequest" element={
+            <Suspense fallback={<Loader />}>
+              <ProtectedRoute><AddRequest /></ProtectedRoute>
+            </Suspense>
+          } />
+
+          <Route path="/viewticket/:id" element={
+            <Suspense fallback={<Loader />}>
+              <ProtectedRoute><ViewTicket /></ProtectedRoute>
+            </Suspense>
+          } />
+
+          <Route path="/export" element={
+            <Suspense fallback={<Loader />}>
+              <ProtectedRoute><ExportStatement /></ProtectedRoute>
+            </Suspense>
+          } />
+
+          <Route path="/forgot-password" element={
+            <Suspense fallback={<Loader />}>
+              <ForgotPassword />
+            </Suspense>
+          } />
+          <Route path="/verify-otp" element={
+            <Suspense fallback={<Loader />}>
+              <VerifyOTP />
+            </Suspense>
+          } />
+          <Route path="/reset-password" element={
+            <Suspense fallback={<Loader />}>
+              <ResetPassword />
+            </Suspense>
+          } />
+
+          <Route path="*" element={
+           <Pnf />
+          } />
+        </Routes>
+      
+      <Suspense fallback={null}>
+        <ToastContainer />
+      </Suspense>
+    </>
+  );
+}
+
+export default App;
