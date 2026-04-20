@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
-import Footer from "./Footer";
+const Sidebar = lazy(()=> import("../components/Sidebar"));
+const Footer = lazy(()=> import("./Footer"));
 
 export default function CommonLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -11,7 +11,9 @@ export default function CommonLayout({ children }) {
       <Header toogleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
       <div className="flex min-h-[calc(100vh-56px)]">
-        <Sidebar isOpen={isSidebarOpen} />
+        <Suspense fallback={null}>
+          <Sidebar isOpen={isSidebarOpen} />
+        </Suspense>
 
         <main className="flex-1 p-6 overflow-auto">{children}</main>
 
