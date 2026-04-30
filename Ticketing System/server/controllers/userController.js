@@ -174,6 +174,7 @@ exports.forgotPasswordController = async (req, res) => {
     const expiry = Date.now() + 5 * 60 * 1000;
 
     otpStore.set(email, { otp, expiry });
+    setTimeout(() => otpStore.delete(email), 10 * 60 * 1000);
 
     await sendOtpEmail(email, otp);
 
@@ -206,9 +207,11 @@ exports.verifyOtpController = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
+    otpStore.delete(email);
     res.status(200).json({
       message: "OTP verified",
     });
+    
 
   } catch (err) {
     res.status(500).json({ message: "Server error" });
